@@ -9,7 +9,7 @@ def adicionar_cliente(nome, email, telefone):
     print("Cliente adicionado com sucesso!")
 
 # Exemplo de uso
-adicionar_cliente("Gustavo", "Gus@gshow.com", "8888888888")
+adicionar_cliente("And", "Andisu@gmail.com", "123456789")
 
 #---------------------------------------------------------------#
 def listar_clientes():
