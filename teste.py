@@ -55,8 +55,8 @@ def menu():
         print("2. Cadastrar Veículo")
         print("3. Registrar Aluguel")
         print("4. Registrar Devolução")
-        print("5. Listar Clientes")
-        print("6. Listar Veículos")
+        print("5. Listar Clientes") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM CLIENTE
+        print("6. Listar Veículos") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM VEÍCULO
         print("7. Importar Dados")
         print("8. Sair")
         opcao = input("Escolha uma opção: ")
