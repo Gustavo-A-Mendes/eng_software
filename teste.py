@@ -21,27 +21,58 @@ def criar_tabelas():
     conexao = conectar_bd()
     cursor = conexao.cursor()
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS clientes (
-            id SERIAL PRIMARY KEY,
-            nome VARCHAR(100) NOT NULL,
-            telefone VARCHAR(15) NOT NULL
+        CREATE TABLE IF NOT EXISTS funcionario(
+            id_funcionario SERIAL,
+            nome VARCHAR(80) not null,
+            email VARCHAR(70) not null,
+            cpf VARCHAR(11) not null,
+            telefone VARCHAR(11) not null,
+            PRIMARY key (id_funcionario)
         );
     ''')
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS veiculos (
-            id SERIAL PRIMARY KEY,
-            modelo VARCHAR(100) NOT NULL,
-            ano INT NOT NULL,
-            disponivel BOOLEAN DEFAULT TRUE
+        CREATE TABLE IF NOT EXISTS cliente(
+            id_cliente SERIAL,
+            nome VARCHAR(80) not null,
+            cpf VARCHAR(11) not null,
+            cnh VARCHAR(11) not null,
+            telefone VARCHAR(11) not null,
+            cidade VARCHAR(50) not null,
+            bairro VARCHAR(50) not null,
+            rua VARCHAR(50) not null,
+            numero VARCHAR(5) not null,
+            PRIMARY key (id_cliente)
         );
     ''')
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS alugueis (
-            id SERIAL PRIMARY KEY,
-            cliente_id INT REFERENCES clientes(id),
-            veiculo_id INT REFERENCES veiculos(id),
-            data_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            data_fim TIMESTAMP
+        CREATE TABLE IF NOT EXISTS carro(
+            id_carro SERIAL,
+            diaria NUMERIC(6, 2) default 0000.00,
+            modelo VARCHAR(30) not null,
+            marca VARCHAR(30) not null,
+            disponibilidade BOOLEAN default TRUE,
+            PRIMARY	key (id_carro)
+        );
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS aluguel(
+            id_aluguel SERIAL,
+            id_funcionario INTEGER not null,
+            id_carro INTEGER not null,
+            id_cliente INTEGER not null,
+            preco_total NUMERIC(7, 2) not null,
+            data_inicio TIMESTAMP not null,
+            data_fim TIMESTAMP,
+            PRIMARY key (id_aluguel),
+            
+            FOREIGN key (id_funcionario) REFERENCES funcionario 
+            ON UPDATE CASCADE ON DELETE CASCADE,
+            
+            FOREIGN key (id_carro) REFERENCES carro
+            ON UPDATE CASCADE ON DELETE CASCADE,
+            
+            FOREIGN key (id_cliente) REFERENCES cliente
+            ON UPDATE CASCADE ON DELETE CASCADE
         );
     ''')
     conexao.commit()
@@ -83,12 +114,150 @@ def menu():
         else:
             print("Opção inválida! Tente novamente.")
 
+# ============================== DEFINIÇÃO DO CRUD ==============================   
+def post_tabela(tabela, dados_envio): # (CREATE)
+    """
+    Envia os dados para uma tabela do banco de dados.
+
+    :param tabela: Nome da tabela.
+    :param dado_envio: lista dos valores que devem ser adicionados.
+    """
+    
+    # Cria conexão e executa o comando:
+    conexao = conectar_bd()
+    cursor = conexao.cursor()
+
+    try:
+        # Obtém as colunas da tabela (excluindo a coluna SERIAL, se houver):
+        cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' AND column_default IS NULL")
+        colunas = [coluna[0] for coluna in cursor.fetchall()]
+        if not colunas:
+            print("Erro: Não foi possível obter as colunas da tabela.")
+        else:
+            # Adiciona os valores na tabela:
+            cursor.execute(f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({', '.join(dados_envio)})")
+            conexao.commit()
+
+    except Exception as e:
+        print(f"Erro ao atualizar: {e}")
+
+    finally:
+        # Encerra conexão:
+        cursor.close()
+        conexao.close()
+
+
+def get_tabela(tabela): # (READ)
+    """
+    Solicita os dados de uma tabela do banco de dados.
+
+    :param tabela: Nome da tabela.
+    """
+    
+    # Cria conexão e executa o comando:
+    conexao = conectar_bd()
+    cursor = conexao.cursor()
+
+    try:
+        cursor.execute(f"SELECT * FROM {tabela}")
+        clientes = cursor.fetchall()
+        # Caso o resultado seja vazio, encerra a função:
+        if not clientes:
+            print("Nenhum cliente cadastrado.")
+            clientes = None
+        
+
+    except Exception as e:
+        print(f"Erro ao atualizar: {e}")
+        clientes = None
+    
+    finally:
+        # Encerra conexão:
+        cursor.close()
+        conexao.close()
+
+        # retorna resultado:
+        return clientes
+ 
+
+def update_tabela(tabela, id, dados_envio): # (UPDATE)
+    """
+    Atualiza um registro em uma tabela específica.
+
+    :param tabela: Nome da tabela.
+    :param id: ID do registro a ser atualizado.
+    :param dados_envio: Dicionário com as colunas e valores a serem atualizados.
+    """
+    
+    # Cria conexão e executa o comando:
+    conexao = conectar_bd()
+    cursor = conexao.cursor()
+    
+    # Cria os pares "coluna = valor" dinamicamente:
+    colunas_valores = [f"{coluna} = {valor}" for coluna, valor in dados_envio.items()]
+    query = f"UPDATE {tabela} SET {', '.join(colunas_valores)} WHERE id = {id}"
+
+    try:
+        if not dados_envio:
+            print("Nenhum dado para atualizar.")
+        else:
+            cursor.execute(query)
+            conexao.commit()
+            print(f"Registro {id} atualizado na tabela '{tabela}' com sucesso.")
+
+    except Exception as e:
+        print(f"Erro ao atualizar: {e}")
+    
+    finally:
+        cursor.close()
+        conexao.close()
+
+
+def delete_tabela(tabela, id = None): # (DELETE)
+    """
+    Remove um registro de uma tabela específica.
+
+    :param tabela: Nome da tabela.
+    :param id: ID do registro a ser removido.
+    """
+    
+    # Cria conexão e executa o comando:
+    conexao = conectar_bd()
+    cursor = conexao.cursor()
+
+    try:
+        if id is None:
+            confirmacao = input(f"Tem certeza que deseja excluir TODOS os registros da tabela '{tabela}'? (sim/não): ").strip().lower()
+            if confirmacao == "sim":
+                query = f"DELETE FROM {tabela}"
+                message = f"TODOS os registros da tabela '{tabela}' foram removidos!"
+            else:
+                print("Operação cancelada.")
+
+        else:
+            query = f"DELETE FROM {tabela} WHERE id = {id}"
+            message = f"Registro {id} removido da tabela '{tabela}' com sucesso."
+
+        cursor.execute(query)
+        print(message)
+        conexao.commit()
+
+    except Exception as e:
+        print(f"Erro ao remover registro: {e}")
+    
+    finally:
+        cursor.close()
+        conexao.close()
+
+# ============================== DEFINIÇÃO DO CRUD ==============================   
+
+# 
 def cadastrar_cliente():
     nome = input("Nome do cliente: ")
     telefone = input("Telefone do cliente: ")
     conexao = conectar_bd()
     cursor = conexao.cursor()
-    cursor.execute("INSERT INTO clientes (nome, telefone) VALUES (%s, %s)", (nome, telefone))
+    cursor.execute("INSERT INTO cliente (nome, cpf, cnh, telefone, cidade, bairro, rua, numero) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (nome, "123123", "123123", telefone, "Iguatu", "Bugi", "Francisco Adolfo", "171"))
     conexao.commit()
     cursor.close()
     conexao.close()
@@ -108,7 +277,7 @@ def cadastrar_veiculo():
 def listar_clientes():
     conexao = conectar_bd()
     cursor = conexao.cursor()
-    cursor.execute("SELECT * FROM clientes")
+    cursor.execute("SELECT * FROM cliente")
     clientes = cursor.fetchall()
 
     if not clientes:
