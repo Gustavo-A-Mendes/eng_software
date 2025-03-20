@@ -1,10 +1,11 @@
 import psycopg2
+import csv
 
 # Configurações do banco de dados
 DB_NAME = "locadora_carro"
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
-DB_HOST = ""
+DB_HOST = "localhost"
 DB_PORT = "5432"
 
 def conectar_bd():
@@ -56,7 +57,8 @@ def menu():
         print("4. Registrar Devolução")
         print("5. Listar Clientes")
         print("6. Listar Veículos")
-        print("7. Sair")
+        print("7. Importar Dados")
+        print("8. Sair")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
@@ -72,6 +74,11 @@ def menu():
         elif opcao == "6":
             listar_veiculos()
         elif opcao == "7":
+            tabela = input("Nome da tabela para importar (clientes, veiculos, alugueis): ").strip()
+            arquivo_csv = input("Nome do arquivo CSV (ex: clientes.csv): ").strip()
+            importar_csv_para_bd(tabela, arquivo_csv)
+        elif opcao == "8":
+            exportar_tabelas_para_csv()
             break
         else:
             print("Opção inválida! Tente novamente.")
@@ -116,6 +123,56 @@ def listar_clientes():
     conexao.close()
     # print("Veículo cadastrado com sucesso!")
 # Outras funções como registrar aluguel, devolução e listar clientes/veículos podem ser implementadas seguindo a mesma lógica.
+
+def importar_csv_para_bd(tabela, arquivo_csv):
+    """Importa dados de um arquivo CSV para a tabela especificada."""
+    conexao = conectar_bd()
+    cursor = conexao.cursor()
+
+    with open(arquivo_csv, mode="r", encoding="utf-8") as arquivo:
+        leitor_csv = csv.reader(arquivo)
+        colunas = next(leitor_csv)  # Lê a primeira linha (nomes das colunas)
+
+        # Criando um placeholder para os valores (%s, %s, ...)
+        placeholders = ", ".join(["%s"] * len(colunas))
+        query = f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({placeholders})"
+
+        for linha in leitor_csv:
+            cursor.execute(query, linha)
+
+    conexao.commit()
+    cursor.close()
+    conexao.close()
+    print(f"Dados do arquivo '{arquivo_csv}' importados para a tabela '{tabela}' com sucesso!")
+
+
+def exportar_tabelas_para_csv():
+    conexao = conectar_bd()
+    cursor = conexao.cursor()
+
+    tabelas = ["clientes", "veiculos", "alugueis"]  # Adicione mais tabelas se necessário
+
+    for tabela in tabelas:
+        arquivo_csv = f"{tabela}.csv"
+        
+        # Executa a consulta para pegar todos os dados da tabela
+        cursor.execute(f"SELECT * FROM {tabela}")
+        dados = cursor.fetchall()  # Recupera todos os registros
+        
+        # Obtém os nomes das colunas
+        colunas = [desc[0] for desc in cursor.description]
+
+        # Escreve os dados no arquivo CSV
+        with open(arquivo_csv, mode="w", newline="", encoding="utf-8") as arquivo:
+            writer = csv.writer(arquivo)
+            writer.writerow(colunas)  # Escreve os cabeçalhos das colunas
+            writer.writerows(dados)   # Escreve os dados
+
+        print(f"Tabela '{tabela}' exportada para '{arquivo_csv}'")
+
+    cursor.close()
+    conexao.close()
+
 
 if __name__ == "__main__":
     criar_tabelas()
