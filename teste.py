@@ -82,6 +82,7 @@ def criar_tabelas():
 
 def menu():
     while True:
+        # os.system('cls')
         print("\n=== Sistema de Aluguel de Carros ===")
         print("1. Cadastro")
         print("2. Consulta")
@@ -94,7 +95,7 @@ def menu():
             while True:
                 os.system('cls') 
                 print("\n=== Sistema de Aluguel de Carros ===")
-                print("1. Registrar Aluguel")
+                print("1. Cadastrar Aluguel")
                 print("2. Cadastrar Cliente")
                 print("3. Cadastrar Veículo")
                 print("4. Cadastrar Funcionário")
@@ -102,7 +103,7 @@ def menu():
                 opcao_submenu = input ("Escolha uma opção: ")
 
                 if opcao_submenu == "1":
-                    registrar_aluguel()
+                    cadastrar_aluguel()
                     # edita_cliente()
                     # delete_tabela("cliente")
                 elif opcao_submenu == "2":
@@ -120,9 +121,9 @@ def menu():
                 os.system('cls')
                 print("\n=== Sistema de Aluguel de Carros ===")
                 print("1. Consultar Aluguéis")
-                print("2. Listar Clientes") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM CLIENTE
-                print("3. Listar Veículos") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM VEÍCULO
-                print("4. Listar Funcionários") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM FUNCIONÁRIO
+                print("2. Consultar Clientes") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM CLIENTE
+                print("3. Consultar Veículos") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM VEÍCULO
+                print("4. Consultar Funcionários") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM FUNCIONÁRIO
                 print("5. Voltar")
                 opcao_submenu = input ("Escolha uma opção: ")
                 
@@ -131,7 +132,7 @@ def menu():
                     while True:
                         os.system('cls')
                         print("\n=== Sistema de Aluguel de Carros ===")
-                        consultar_alugueis()
+                        exibe_alugueis()
                         ret = exibir_opcoes()
                         if ret == "1":
                             id = input("Especifique um ID: ")
@@ -429,18 +430,8 @@ def cadastrar_funcionario():
 
     post_tabela("funcionarios", dados)
 
-# Modifica os dados de um cliente:
-def edita_cliente():
-    dados = {
-        "nome": input("Nome: ").upper(),
-        "cpf": input("CPF: ").upper(),
-        "cnh": input("CNH: ").upper(),
-    }
-    
-    update_tabela("cliente", 2, dados)
-
 # Registra uma nova locação
-def registrar_aluguel():
+def cadastrar_aluguel():
     print("DADOS PESSOAIS DO CLIENTE")
     id_func = input("CPF: ").upper()
     id_car = input("CNH: ").upper()
@@ -484,6 +475,26 @@ def exibe_clientes():
         for cliente in dados_clientes:
             print(cliente)
 
+def exibe_funcionarios():
+    dados_funcionarios = listar_tabela("funcionario")
+    
+    if not dados_funcionarios:
+        print("Nenhum funcionário cadastrado.")
+    else:
+        print("\n=== Lista de Funcionários ===")
+        for funcionario in dados_funcionarios:
+            print(funcionario)
+
+def exibe_aluguel():
+    dados_alugueis = listar_tabela("aluguel")
+    
+    if not dados_alugueis:
+        print("Nenhum aluguel cadastrado.")
+    else:
+        print("\n=== Lista de Aluguéis ===")
+        for aluguel in dados_alugueis:
+            print(aluguel)
+
 # Exibe a lista de carros cadastrados:
 def exibe_carros():
     dados_carros = listar_tabela("cliente")
@@ -494,6 +505,26 @@ def exibe_carros():
         print("\n=== Lista de Carros ===")
         for carro in dados_carros:
             print(carro)
+
+# Modifica os dados de um cliente:
+def edita_cliente(id):
+    dados = {
+        "nome": input("Nome: ").upper(),
+        "cpf": input("CPF: ").upper(),
+        "cnh": input("CNH: ").upper(),
+    }
+    
+    update_tabela("cliente", 2, dados)
+
+def edita_funcionario(id):
+    pass
+
+def edita_aluguel(id):
+    pass
+
+def edita_carro(id):
+    pass
+
 
 # Importa dados dos arquivos ".csv" para o banco de dados:
 def importar_csv_para_bd():
@@ -511,7 +542,7 @@ def importar_csv_para_bd():
 
                 # Criando um placeholder para os valores (%s, %s, ...)
                 placeholders = ", ".join(["%s"] * len(colunas))
-                query = f"INSERT INTO {nome_tabela} ({', '.join(colunas)}) VALUES ({placeholders} ON CONFLICT ({id}) DO NOTHING;"
+                query = f"INSERT INTO {nome_tabela} ({', '.join(colunas)}) VALUES ({placeholders}) ON CONFLICT ({id}) DO NOTHING;"
 
                 for linha in leitor_csv:
                     cursor.execute(query, linha)
