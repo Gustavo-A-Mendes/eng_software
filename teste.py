@@ -230,9 +230,7 @@ def menu():
             
         # IMPORTAR DADOS
         elif opcao == "3":
-            tabela = input("Nome da tabela para importar (clientes, veiculos, alugueis): ").strip()
-            arquivo_csv = input("Nome do arquivo CSV (ex: clientes.csv): ").strip()
-            importar_csv_para_bd(tabela, arquivo_csv)
+            importar_csv_para_bd()
 
         # SAIR
         elif opcao == "4":
