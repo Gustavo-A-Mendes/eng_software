@@ -24,7 +24,6 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS funcionario(
             id_funcionario SERIAL,
             nome VARCHAR(80) not null,
-            email VARCHAR(70) not null,
             cpf VARCHAR(11) not null,
             telefone VARCHAR(11) not null,
             PRIMARY key (id_funcionario)
@@ -63,6 +62,7 @@ def criar_tabelas():
             preco_total NUMERIC(7, 2) not null,
             data_inicio TIMESTAMP not null,
             data_fim TIMESTAMP,
+            status BOOLEAN default TRUE,
             PRIMARY key (id_aluguel),
             
             FOREIGN key (id_funcionario) REFERENCES funcionario 
@@ -107,9 +107,7 @@ def menu():
         elif opcao == "6":
             exibe_carros()
         elif opcao == "7":
-            tabela = input("Nome da tabela para importar (clientes, veiculos, alugueis): ").strip()
-            arquivo_csv = input("Nome do arquivo CSV (ex: clientes.csv): ").strip()
-            importar_csv_para_bd(tabela, arquivo_csv)
+            importar_csv_para_bd()
         elif opcao == "8":
             exportar_tabelas_para_csv()
             break
@@ -359,30 +357,38 @@ def exibe_carros():
         for carro in dados_carros:
             print(carro)
 
-def importar_csv_para_bd(tabela, arquivo_csv):
+# Importa dados dos arquivos ".csv" para o banco de dados:
+def importar_csv_para_bd():
     """Importa dados de um arquivo CSV para a tabela especificada."""
     conexao = conectar_bd()
     cursor = conexao.cursor()
 
-    tabelas = ["funcionario", "cliente", "carro", "aluguel"]
+    tabelas = {"id_funcionario": "funcionario", "id_cliente": "cliente", "id_carro": "carro", "id_aluguel": "aluguel"}
+    
+    for id, nome_tabela in tabelas.items():
+        try:
+            with open(nome_tabela+".csv", mode="r", encoding="utf-8") as arquivo:
+                leitor_csv = csv.reader(arquivo)
+                colunas = next(leitor_csv)  # Lê a primeira linha (nomes das colunas)
 
-    with open(arquivo_csv, mode="r", encoding="utf-8") as arquivo:
-        leitor_csv = csv.reader(arquivo)
-        colunas = next(leitor_csv)  # Lê a primeira linha (nomes das colunas)
+                # Criando um placeholder para os valores (%s, %s, ...)
+                placeholders = ", ".join(["%s"] * len(colunas))
+                query = f"INSERT INTO {nome_tabela} ({', '.join(colunas)}) VALUES ({placeholders} ON CONFLICT ({id}) DO NOTHING;"
 
-        # Criando um placeholder para os valores (%s, %s, ...)
-        placeholders = ", ".join(["%s"] * len(colunas))
-        query = f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({placeholders})"
+                for linha in leitor_csv:
+                    cursor.execute(query, linha)
 
-        for linha in leitor_csv:
-            cursor.execute(query, linha)
+            conexao.commit()
+            print(f"Dados do arquivo \"{nome_tabela+'.csv'}\" importados para a tabela \"{nome_tabela}\" com sucesso!")
 
-    conexao.commit()
+
+        except Exception as e:
+            print(f"Erro ao importar dados: {e}")
+
     cursor.close()
     conexao.close()
-    print(f"Dados do arquivo '{arquivo_csv}' importados para a tabela '{tabela}' com sucesso!")
 
-
+# Exporta dodas do banco de dados, para um arquivo ".csv":
 def exportar_tabelas_para_csv():
     conexao = conectar_bd()
     cursor = conexao.cursor()
