@@ -1,5 +1,6 @@
 import psycopg2
 import csv
+import os
 
 # Configurações do banco de dados
 DB_NAME = "locadora_carro"
@@ -24,7 +25,6 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS funcionario(
             id_funcionario SERIAL,
             nome VARCHAR(80) not null,
-            email VARCHAR(70) not null,
             cpf VARCHAR(11) not null,
             telefone VARCHAR(11) not null,
             PRIMARY key (id_funcionario)
@@ -63,6 +63,7 @@ def criar_tabelas():
             preco_total NUMERIC(7, 2) not null,
             data_inicio TIMESTAMP not null,
             data_fim TIMESTAMP,
+            status BOOLEAN default TRUE,
             PRIMARY key (id_aluguel),
             
             FOREIGN key (id_funcionario) REFERENCES funcionario 
@@ -82,37 +83,162 @@ def criar_tabelas():
 def menu():
     while True:
         print("\n=== Sistema de Aluguel de Carros ===")
-        print("1. Registrar Aluguel")
-        print("2. Cadastrar Cliente")
-        print("3. Cadastrar Veículo")
-        print("4. Consultar Aluguéis")
-        print("5. Listar Clientes") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM CLIENTE
-        print("6. Listar Veículos") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM VEÍCULO
-        print("7. Importar Dados")
-        print("8. Sair")
+        print("1. Cadastro")
+        print("2. Consulta")
+        print("3. Importar Dados")
+        print("4. Sair")
         opcao = input("Escolha uma opção: ")
 
+        # SUBMENU CADASTRO
         if opcao == "1":
-            registrar_aluguel()
-            # edita_cliente()
-            # delete_tabela("cliente")
+            while True:
+                os.system('cls') 
+                print("\n=== Sistema de Aluguel de Carros ===")
+                print("1. Registrar Aluguel")
+                print("2. Cadastrar Cliente")
+                print("3. Cadastrar Veículo")
+                print("4. Cadastrar Funcionário")
+                print("5. Voltar")
+                opcao_submenu = input ("Escolha uma opção: ")
+
+                if opcao_submenu == "1":
+                    registrar_aluguel()
+                    # edita_cliente()
+                    # delete_tabela("cliente")
+                elif opcao_submenu == "2":
+                    cadastrar_cliente()
+                elif opcao_submenu == "3":
+                    cadastrar_carro()
+                elif opcao_submenu == "4":
+                    cadastrar_funcionario()
+                elif opcao_submenu == "5":
+                    break
+
+        # SUBMENU CONSULTA
         elif opcao == "2":
-            cadastrar_cliente()
+            while True:
+                os.system('cls')
+                print("\n=== Sistema de Aluguel de Carros ===")
+                print("1. Consultar Aluguéis")
+                print("2. Listar Clientes") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM CLIENTE
+                print("3. Listar Veículos") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM VEÍCULO
+                print("4. Listar Funcionários") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM FUNCIONÁRIO
+                print("5. Voltar")
+                opcao_submenu = input ("Escolha uma opção: ")
+                
+                # SUBMENU ALUGUEL
+                if opcao_submenu == "1":
+                    while True:
+                        os.system('cls')
+                        print("\n=== Sistema de Aluguel de Carros ===")
+                        consultar_alugueis()
+                        ret = exibir_opcoes()
+                        if ret == "1":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("aluguel", id):
+                                editar_aluguel(id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "2":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("aluguel", id):
+                                delete_tabela("aluguel", id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "3":
+                            break
+                        else: 
+                            print("Opção inválida.")
+
+                # SUBMENU CLIENTE
+                elif opcao_submenu == "2":
+                    while True:
+                        os.system('cls')
+                        print("\n=== Sistema de Aluguel de Carros ===")
+                        exibe_clientes()
+                        ret = exibir_opcoes()
+                        if ret == "1":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("cliente", id):
+                                editar_cliente(id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "2":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("cliente", id):
+                                delete_tabela("cliente", id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "3":
+                            break
+                        else: 
+                            print("Opção inválida.")
+
+                # SUBMENU CARROS
+                elif opcao_submenu == "3":
+                    while True:
+                        os.system('cls')
+                        print("\n=== Sistema de Aluguel de Carros ===")
+                        exibe_carros()
+                        ret = exibir_opcoes()
+                        if ret == "1":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("carro", id):
+                                editar_carro(id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "2":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("carro", id):
+                                delete_tabela("carro", id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "3":
+                            break
+                        else: 
+                            print("Opção inválida.")
+
+                # SUBMENU FUNCIONÁRIOS
+                elif opcao_submenu == "4":
+                    while True:
+                        os.system('cls')
+                        print("\n=== Sistema de Aluguel de Carros ===")
+                        exibe_funcionarios()
+                        ret = exibir_opcoes()
+                        if ret == "1":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("funcionario", id):
+                                editar_funcionario(id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "2":
+                            id = input("Especifique um ID: ")
+                            if verificar_id_existente("funcionario", id):
+                                delete_tabela("funcionario", id)
+                            else:
+                                print("ID não encontrado.")
+                        elif ret == "3":
+                            break
+                        else: 
+                            print("Opção inválida.")
+
+                elif opcao_submenu == "5":
+                    break
+
+                else:
+                    print("Opção inválida.")
+            
+        # IMPORTAR DADOS
         elif opcao == "3":
-            cadastrar_carro()
-        elif opcao == "4":
-            consultar_alugueis()
-        elif opcao == "5":
-            exibe_clientes()
-        elif opcao == "6":
-            exibe_carros()
-        elif opcao == "7":
             tabela = input("Nome da tabela para importar (clientes, veiculos, alugueis): ").strip()
             arquivo_csv = input("Nome do arquivo CSV (ex: clientes.csv): ").strip()
             importar_csv_para_bd(tabela, arquivo_csv)
-        elif opcao == "8":
+
+        # SAIR
+        elif opcao == "4":
             exportar_tabelas_para_csv()
             break
+        
         else:
             print("Opção inválida! Tente novamente.")
 
@@ -293,6 +419,18 @@ def cadastrar_carro():
 
     post_tabela("carro", dados)
 
+# Cadastra um funcionário:
+def cadastrar_funcionario():
+    print("DADOS PESSOAIS DO FUNCIONÁRIO")
+    nome = input("Nome Completo: ").upper()
+    cpf = input("CPF: ").upper()
+    telefone = input("Telefone (somente números): ").upper()
+    print()
+    
+    dados = [nome, cpf, telefone]
+
+    post_tabela("funcionarios", dados)
+
 # Modifica os dados de um cliente:
 def edita_cliente():
     dados = {
@@ -382,7 +520,6 @@ def importar_csv_para_bd(tabela, arquivo_csv):
     conexao.close()
     print(f"Dados do arquivo '{arquivo_csv}' importados para a tabela '{tabela}' com sucesso!")
 
-
 def exportar_tabelas_para_csv():
     conexao = conectar_bd()
     cursor = conexao.cursor()
@@ -410,6 +547,15 @@ def exportar_tabelas_para_csv():
     cursor.close()
     conexao.close()
 
+def exibir_opcoes():
+    print("1. Editar")
+    print("2. Remover")
+    print("3. Voltar")
+    return input("Escolha uma opção: ")
+
+def verificar_id_existente (cursor, tabela, id):
+    cursor.execute(f"SELECT * FROM {tabela} WHERE id = {id}")
+    return cursor.fetchone() is not None
 
 if __name__ == "__main__":
     criar_tabelas()
