@@ -497,29 +497,38 @@ def exibe_carros():
         for carro in dados_carros:
             print(carro)
 
-def importar_csv_para_bd(tabela, arquivo_csv):
+# Importa dados dos arquivos ".csv" para o banco de dados:
+def importar_csv_para_bd():
     """Importa dados de um arquivo CSV para a tabela especificada."""
     conexao = conectar_bd()
     cursor = conexao.cursor()
 
-    tabelas = ["funcionario", "cliente", "carro", "aluguel"]
+    tabelas = {"id_funcionario": "funcionario", "id_cliente": "cliente", "id_carro": "carro", "id_aluguel": "aluguel"}
+    
+    for id, nome_tabela in tabelas.items():
+        try:
+            with open(nome_tabela+".csv", mode="r", encoding="utf-8") as arquivo:
+                leitor_csv = csv.reader(arquivo)
+                colunas = next(leitor_csv)  # Lê a primeira linha (nomes das colunas)
 
-    with open(arquivo_csv, mode="r", encoding="utf-8") as arquivo:
-        leitor_csv = csv.reader(arquivo)
-        colunas = next(leitor_csv)  # Lê a primeira linha (nomes das colunas)
+                # Criando um placeholder para os valores (%s, %s, ...)
+                placeholders = ", ".join(["%s"] * len(colunas))
+                query = f"INSERT INTO {nome_tabela} ({', '.join(colunas)}) VALUES ({placeholders} ON CONFLICT ({id}) DO NOTHING;"
 
-        # Criando um placeholder para os valores (%s, %s, ...)
-        placeholders = ", ".join(["%s"] * len(colunas))
-        query = f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({placeholders})"
+                for linha in leitor_csv:
+                    cursor.execute(query, linha)
 
-        for linha in leitor_csv:
-            cursor.execute(query, linha)
+            conexao.commit()
+            print(f"Dados do arquivo \"{nome_tabela+'.csv'}\" importados para a tabela \"{nome_tabela}\" com sucesso!")
 
-    conexao.commit()
+
+        except Exception as e:
+            print(f"Erro ao importar dados: {e}")
+
     cursor.close()
     conexao.close()
-    print(f"Dados do arquivo '{arquivo_csv}' importados para a tabela '{tabela}' com sucesso!")
 
+# Exporta dodas do banco de dados, para um arquivo ".csv":
 def exportar_tabelas_para_csv():
     conexao = conectar_bd()
     cursor = conexao.cursor()
