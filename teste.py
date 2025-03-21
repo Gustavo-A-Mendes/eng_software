@@ -47,9 +47,9 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS carro(
             id_carro SERIAL,
-            diaria NUMERIC(6, 2) default 0000.00,
             modelo VARCHAR(30) not null,
             marca VARCHAR(30) not null,
+            diaria NUMERIC(6, 2) default 0000.00,
             disponibilidade BOOLEAN default TRUE,
             PRIMARY	key (id_carro)
         );
@@ -82,10 +82,10 @@ def criar_tabelas():
 def menu():
     while True:
         print("\n=== Sistema de Aluguel de Carros ===")
-        print("1. Cadastrar Cliente")
-        print("2. Cadastrar Veículo")
-        print("3. Registrar Aluguel")
-        print("4. Registrar Devolução")
+        print("1. Registrar Aluguel")
+        print("2. Cadastrar Cliente")
+        print("3. Cadastrar Veículo")
+        print("4. Consultar Aluguéis")
         print("5. Listar Clientes") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM CLIENTE
         print("6. Listar Veículos") # MENU SECUNDARIO PARA BUSCAR E EDITAR UM VEÍCULO
         print("7. Importar Dados")
@@ -93,17 +93,19 @@ def menu():
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            cadastrar_cliente()
-        elif opcao == "2":
-            cadastrar_veiculo()
-        elif opcao == "3":
             registrar_aluguel()
+            # edita_cliente()
+            # delete_tabela("cliente")
+        elif opcao == "2":
+            cadastrar_cliente()
+        elif opcao == "3":
+            cadastrar_carro()
         elif opcao == "4":
-            registrar_devolucao()
+            consultar_alugueis()
         elif opcao == "5":
-            listar_clientes()
+            exibe_clientes()
         elif opcao == "6":
-            listar_veiculos()
+            exibe_carros()
         elif opcao == "7":
             tabela = input("Nome da tabela para importar (clientes, veiculos, alugueis): ").strip()
             arquivo_csv = input("Nome do arquivo CSV (ex: clientes.csv): ").strip()
@@ -115,18 +117,21 @@ def menu():
             print("Opção inválida! Tente novamente.")
 
 # ============================== DEFINIÇÃO DO CRUD ==============================   
-def post_tabela(tabela, dados_envio): # (CREATE)
+# (CREATE)
+def post_tabela(tabela, dados_envio):
     """
     Envia os dados para uma tabela do banco de dados.
 
     :param tabela: Nome da tabela.
-    :param dado_envio: lista dos valores que devem ser adicionados.
+    :param dado_envio: Lista dos valores que devem ser adicionados.
     """
     
     # Cria conexão e executa o comando:
     conexao = conectar_bd()
     cursor = conexao.cursor()
 
+    valores = ', '.join(["%s"] * len(dados_envio))
+    
     try:
         # Obtém as colunas da tabela (excluindo a coluna SERIAL, se houver):
         cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' AND column_default IS NULL")
@@ -135,7 +140,7 @@ def post_tabela(tabela, dados_envio): # (CREATE)
             print("Erro: Não foi possível obter as colunas da tabela.")
         else:
             # Adiciona os valores na tabela:
-            cursor.execute(f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({', '.join(dados_envio)})")
+            cursor.execute(f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({valores})", tuple(dados_envio))
             conexao.commit()
 
     except Exception as e:
@@ -146,8 +151,8 @@ def post_tabela(tabela, dados_envio): # (CREATE)
         cursor.close()
         conexao.close()
 
-
-def get_tabela(tabela): # (READ)
+# (READ)
+def get_tabela(tabela):
     """
     Solicita os dados de uma tabela do banco de dados.
 
@@ -179,8 +184,8 @@ def get_tabela(tabela): # (READ)
         # retorna resultado:
         return clientes
  
-
-def update_tabela(tabela, id, dados_envio): # (UPDATE)
+# (UPDATE)
+def update_tabela(tabela, id, dados_envio):
     """
     Atualiza um registro em uma tabela específica.
 
@@ -194,14 +199,17 @@ def update_tabela(tabela, id, dados_envio): # (UPDATE)
     cursor = conexao.cursor()
     
     # Cria os pares "coluna = valor" dinamicamente:
-    colunas_valores = [f"{coluna} = {valor}" for coluna, valor in dados_envio.items()]
-    query = f"UPDATE {tabela} SET {', '.join(colunas_valores)} WHERE id = {id}"
+    colunas_valores = [f"{coluna} = %s" for coluna in dados_envio.keys()]
+
+    cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' LIMIT 1")
+    id_name = "".join(cursor.fetchall()[0])
+    query = f"UPDATE {tabela} SET {', '.join(colunas_valores)} WHERE {id_name} = {id}"
 
     try:
         if not dados_envio:
             print("Nenhum dado para atualizar.")
         else:
-            cursor.execute(query)
+            cursor.execute(query, tuple(dados_envio.values()))
             conexao.commit()
             print(f"Registro {id} atualizado na tabela '{tabela}' com sucesso.")
 
@@ -212,8 +220,8 @@ def update_tabela(tabela, id, dados_envio): # (UPDATE)
         cursor.close()
         conexao.close()
 
-
-def delete_tabela(tabela, id = None): # (DELETE)
+# (DELETE)
+def delete_tabela(tabela, id = None):
     """
     Remove um registro de uma tabela específica.
 
@@ -235,7 +243,10 @@ def delete_tabela(tabela, id = None): # (DELETE)
                 print("Operação cancelada.")
 
         else:
-            query = f"DELETE FROM {tabela} WHERE id = {id}"
+            cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' LIMIT 1")
+            id_name = "".join(cursor.fetchall()[0])
+
+            query = f"DELETE FROM {tabela} WHERE {id_name} = {id}"
             message = f"Registro {id} removido da tabela '{tabela}' com sucesso."
 
         cursor.execute(query)
@@ -249,54 +260,111 @@ def delete_tabela(tabela, id = None): # (DELETE)
         cursor.close()
         conexao.close()
 
-# ============================== DEFINIÇÃO DO CRUD ==============================   
-
-# 
+# ============================================================   
+# Cadastra um novo cliente:
 def cadastrar_cliente():
-    nome = input("Nome do cliente: ")
-    telefone = input("Telefone do cliente: ")
+    print("DADOS PESSOAIS DO CLIENTE")
+    nome = input("Nome Completo: ").upper()
+    cpf = input("CPF: ").upper()
+    cnh = input("CNH: ").upper()
+    telefone = input("Telefone (somente números): ").upper()
+    print()
+    print("ENDEREÇO DO CLIENTE")
+    cidade = input("Cidade: ").upper()
+    bairro = input("Bairro: ").upper()
+    rua = input("Rua: ").upper()
+    numero = input("Número: ").upper()
+    print()
+    
+    dados = [nome, cpf, cnh, telefone, cidade, bairro, rua, numero]
+
+    post_tabela("cliente", dados)
+
+# Cadastra um novo carro:
+def cadastrar_carro():
+    print("DADOS DO CLIENTE")
+    modelo = input("Modelo: ").upper()
+    marca = input("Marca: ").upper()
+    diaria = float(input("Diaria: "))
+    disponibilidade = 1
+    print()
+    
+    dados = [modelo, marca, diaria, disponibilidade]
+
+    post_tabela("carro", dados)
+
+# Modifica os dados de um cliente:
+def edita_cliente():
+    dados = {
+        "nome": input("Nome: ").upper(),
+        "cpf": input("CPF: ").upper(),
+        "cnh": input("CNH: ").upper(),
+    }
+    
+    update_tabela("cliente", 2, dados)
+
+# Registra uma nova locação
+def registrar_aluguel():
+    print("DADOS PESSOAIS DO CLIENTE")
+    id_func = input("CPF: ").upper()
+    id_car = input("CNH: ").upper()
+    id_cli = input("Nome Completo: ").upper()
+    data_ini = input("Cidade: ").upper()
+    data_fim = input("Bairro: ").upper()
+    preco_total = input("Telefone (somente números): ").upper()
+    status = input("Rua: ").upper()
+    print()
+
+    dados = [id_func, id_car, id_cli, data_ini, data_fim, preco_total, status]
+
+    post_tabela("aluguel", dados)
+
+# Retorna uma lista de dados de uma tabela:
+def listar_tabela(tabela):
     conexao = conectar_bd()
     cursor = conexao.cursor()
-    cursor.execute("INSERT INTO cliente (nome, cpf, cnh, telefone, cidade, bairro, rua, numero) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (nome, "123123", "123123", telefone, "Iguatu", "Bugi", "Francisco Adolfo", "171"))
-    conexao.commit()
-    cursor.close()
-    conexao.close()
-    print("Cliente cadastrado com sucesso!")
 
-def cadastrar_veiculo():
-    modelo = input("Modelo do veículo: ")
-    ano = input("Ano do veículo: ")
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
-    cursor.execute("INSERT INTO veiculos (modelo, ano) VALUES (%s, %s)", (modelo, ano))
-    conexao.commit()
-    cursor.close()
-    conexao.close()
-    print("Veículo cadastrado com sucesso!")
+    try:
+        cursor.execute(f"SELECT * FROM {tabela}")
+        dados_tabela = cursor.fetchall()
+    
+    except Exception as e:
+        print(f"Erro ao buscar dados: {e}")
+        dados_tabela = None
 
-def listar_clientes():
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
-    cursor.execute("SELECT * FROM cliente")
-    clientes = cursor.fetchall()
+    finally:
+        cursor.close()
+        conexao.close()
+        return dados_tabela
 
-    if not clientes:
+# Exibe a lista de clientes cadastrados:
+def exibe_clientes():
+    dados_clientes = listar_tabela("cliente")
+    
+    if not dados_clientes:
         print("Nenhum cliente cadastrado.")
     else:
         print("\n=== Lista de Clientes ===")
-        for cliente in clientes:
+        for cliente in dados_clientes:
             print(cliente)
-            # print(f"ID: {cliente[0]} | Nome: {cliente[1]} | Telefone: {cliente[2]}")
 
-    cursor.close()
-    conexao.close()
-    # print("Veículo cadastrado com sucesso!")
-# Outras funções como registrar aluguel, devolução e listar clientes/veículos podem ser implementadas seguindo a mesma lógica.
+# Exibe a lista de carros cadastrados:
+def exibe_carros():
+    dados_carros = listar_tabela("cliente")
+    
+    if not dados_carros:
+        print("Nenhum carro cadastrado.")
+    else:
+        print("\n=== Lista de Carros ===")
+        for carro in dados_carros:
+            print(carro)
 
 def importar_csv_para_bd(tabela, arquivo_csv):
     """Importa dados de um arquivo CSV para a tabela especificada."""
     conexao = conectar_bd()
     cursor = conexao.cursor()
+
+    tabelas = ["funcionario", "cliente", "carro", "aluguel"]
 
     with open(arquivo_csv, mode="r", encoding="utf-8") as arquivo:
         leitor_csv = csv.reader(arquivo)
@@ -319,7 +387,7 @@ def exportar_tabelas_para_csv():
     conexao = conectar_bd()
     cursor = conexao.cursor()
 
-    tabelas = ["clientes", "veiculos", "alugueis"]  # Adicione mais tabelas se necessário
+    tabelas = ["funcionario", "cliente", "carro", "aluguel"]
 
     for tabela in tabelas:
         arquivo_csv = f"{tabela}.csv"
