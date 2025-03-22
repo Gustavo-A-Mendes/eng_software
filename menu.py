@@ -1,11 +1,36 @@
 from crud import *
 from sistema import *
 
-# 
-def menu():
+#
+def menu_inicial():
     while True:
         os.system('cls')
         print("\n=== Sistema de Aluguel de Carros ===")
+        print("1. Cliente")
+        print("2. Funcionário")
+        opcao = input("Escolha uma opção: ")
+
+        # MENU CLIENTE
+        if opcao == "1":
+            menu_cliente()
+
+        # MENU FUNCIONÁRIO
+        elif opcao == "2":
+            menu_funcionario()
+        
+        else:
+            print("\nOpção inválida! Tente novamente.")
+            sleep(0.25)
+
+#
+def menu_cliente():
+    pass
+
+# 
+def menu_funcionario():
+    while True:
+        os.system('cls')
+        print("=== Sistema de Aluguel de Carros ===")
         print("1. Cadastro")
         print("2. Consulta")
         print("3. Importar Dados")
@@ -256,4 +281,4 @@ def verifica_id_existente(tabela, id):
 # Execução do sistema:
 if __name__ == "__main__":
     criar_tabelas()
-    menu()
+    menu_geral()

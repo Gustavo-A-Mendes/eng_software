@@ -78,8 +78,8 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS aluguel(
             id_aluguel SERIAL,
             id_funcionario INTEGER not null,
-            id_carro INTEGER not null,
             id_cliente INTEGER not null,
+            id_carro INTEGER not null,
             data_inicio DATE not null,
             data_fim DATE,
             preco_total NUMERIC(7, 2) not null,
@@ -97,13 +97,33 @@ def criar_tabelas():
             ON UPDATE CASCADE ON DELETE CASCADE
         );
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS login(
+            id_login SERIAL,
+            usuario VARCHAR(30) not null,
+            senha VARCHAR(30) not null,            
+            tipo_usuario VARCHAR(15) not null CHECK (tipo_usuario IN ('cliente', 'funcionario')),
+            
+            id_cliente INTEGER,
+            id_funcionario INTEGER,
+            
+            PRIMARY key (id_login),
+            
+            CONSTRAINT fk_cliente FOREIGN KEY (id_cliente) REFERENCES cliente ON DELETE CASCADE,
+            CONSTRAINT fk_funcionario FOREIGN KEY (id_funcionario) REFERENCES funcionario ON DELETE CASCADE,
+            CONSTRAINT chk_tipo_usuario CHECK (
+                (id_cliente IS NOT NULL AND id_funcionario IS NULL) OR
+                (id_cliente IS NULL AND id_funcionario IS NOT NULL)
+            )
+        );
+    ''')
     conexao.commit()
     cursor.close()
     conexao.close()
 
 # ============================== DEFINIÇÃO DO CRUD ==============================   
 # (CREATE)
-def post_tabela(tabela, dados_envio):
+def post_tabela(conexao, tabela, dados_envio, autocommit=True):
     """
     Envia os dados para uma tabela do banco de dados.
 
@@ -112,8 +132,6 @@ def post_tabela(tabela, dados_envio):
     """
     
     try:
-        # Cria conexão e executa o comando:
-        conexao = conectar_bd()
         cursor = conexao.cursor()
 
         valores = ', '.join(["%s"] * len(dados_envio))
@@ -124,25 +142,26 @@ def post_tabela(tabela, dados_envio):
         if not colunas:
             print("Erro: Não foi possível obter as colunas da tabela.")
             sleep(0.25)
-            return False
+            return None
         else:
             # Adiciona os valores na tabela:
-            cursor.execute(f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({valores})", tuple(dados_envio))
-            conexao.commit()
-            return True
+            cursor.execute(f"INSERT INTO {tabela} ({', '.join(colunas)}) VALUES ({valores}) RETURNING id_{tabela}", tuple(dados_envio))
+            id_gerado = cursor.fetchone()[0]
+
+            if autocommit:
+                conexao.commit()
+            return id_gerado
 
     except Exception as e:
         print(f"Erro ao atualizar: {e}")
         sleep(0.25)
-        return False
+        return None
 
     finally:
-        # Encerra conexão:
         cursor.close()
-        conexao.close()
 
 # (READ)
-def get_tabela(tabela):
+def get_tabela(conexao, tabela):
     """
     Solicita os dados de uma tabela do banco de dados.
 
@@ -150,33 +169,22 @@ def get_tabela(tabela):
     """
     
     try:
-        # Cria conexão e executa o comando:
-        conexao = conectar_bd()
         cursor = conexao.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute(f"SELECT * FROM {tabela}")
-        clientes = cursor.fetchall()
-        # Caso o resultado seja vazio, encerra a função:
-        if not clientes:
-            print("Nenhum cliente cadastrado.")
-            sleep(0.25)
-            return None
+        dados_tabela = cursor.fetchall()
+        return dados_tabela
         
-        return clientes
-        
-
     except Exception as e:
         print(f"Erro ao atualizar: {e}")
         sleep(0.25)
-        clientes = None
+        return None
     
     finally:
-        # Encerra conexão:
         cursor.close()
-        conexao.close()
  
 # (UPDATE)
-def update_tabela(tabela, id, dados_envio):
+def update_tabela(conexao, tabela, id, dados_envio):
     """
     Atualiza um registro em uma tabela específica.
 
@@ -186,8 +194,6 @@ def update_tabela(tabela, id, dados_envio):
     """
     
     try:
-        # Cria conexão e executa o comando:
-        conexao = conectar_bd()
         cursor = conexao.cursor()
         
         # Cria os pares "coluna = valor" dinamicamente:
@@ -214,7 +220,6 @@ def update_tabela(tabela, id, dados_envio):
     
     finally:
         cursor.close()
-        conexao.close()
 
 # (DELETE)
 def delete_tabela(tabela, id = None):
@@ -226,7 +231,7 @@ def delete_tabela(tabela, id = None):
     """
     
     try:
-        # Cria conexão e executa o comando:
+        # Inicia uma conexão ao banco de dados:
         conexao = conectar_bd()
         cursor = conexao.cursor()
 
@@ -258,33 +263,18 @@ def delete_tabela(tabela, id = None):
         return False
     
     finally:
+        # Fecha a conexão:
         cursor.close()
         conexao.close()
 
 # ===============================================================================
-# Retorna uma lista de dados de uma tabela:
-def listar_tabela(tabela):
-    try:
-        conexao = conectar_bd()
-        cursor = conexao.cursor(cursor_factory=RealDictCursor)
-
-        cursor.execute(f"SELECT * FROM {tabela}")
-        dados_tabela = cursor.fetchall()
-        return dados_tabela
-    
-    except Exception as e:
-        print(f"Erro ao buscar dados: {e}")
-        sleep(0.25)
-        return None
-
-    finally:
-        cursor.close()
-        conexao.close()
-
-# Exibe a lista de uma tabela:
+# Exibe as linhas uma tabela:
 def exibe_tabela(nome_tabela):
     try:
-        dados_tabela = listar_tabela(f"{nome_tabela}")
+        # Inicia uma conexão:
+        conexao = conectar_bd()
+
+        dados_tabela = get_tabela(conexao, f"{nome_tabela}")
 
         if not dados_tabela:
             print(f"Nenhum(a) {nome_tabela} cadastrado(a).")
@@ -304,6 +294,10 @@ def exibe_tabela(nome_tabela):
         print(f"Erro : {e}")
         sleep(0.25)
         return False
+    
+    finally:
+        # Fecha a conexão:
+        conexao.close()
 
 # Exibe os dados de uma linha:
 def exibe_dados(dado):
@@ -402,29 +396,43 @@ def dados_tabela(tabela, id):
 # Atualiza status de cliente e carro ao iniciar aluguel:
 def inicia_aluguel(id_cliente, id_carro):
     try:
-        update_tabela('cliente', id_cliente, {'status_aluguel': True})
-        update_tabela('carro', id_carro, {'disponibilidade': False})
+        # Inicia a conexão:
+        conexao = conectar_bd()
+
+        update_tabela(conexao, 'cliente', id_cliente, {'status_aluguel': True})
+        update_tabela(conexao, 'carro', id_carro, {'disponibilidade': False})
         return True
     
     except Exception as e:
         print(f"Erro : {e}")
         sleep(0.25)
         return False
+    
+    finally:
+        # Fecha a conexão:
+        conexao.close()
 
 # Atualiza status de cliente e carro ao encerrar aluguel:
 def encerra_aluguel(dados_aluguel):
     try:
+        # Inicia a conexão:
+        conexao = conectar_bd()
+
         id_cli = dados_aluguel['id_cliente']
         id_car = dados_aluguel['id_carro']
 
-        update_tabela('cliente', id_cli, {'status_aluguel': False})
-        update_tabela('carro', id_car, {'disponibilidade': True})
+        update_tabela(conexao, 'cliente', id_cli, {'status_aluguel': False})
+        update_tabela(conexao, 'carro', id_car, {'disponibilidade': True})
         return True
 
     except Exception as e:
         print(f"Erro : {e}")
         sleep(0.25)
         return False
+
+    finally:
+        # Fecha a conexão:
+        conexao.close()
 
 # Importa dados dos arquivos ".csv" para o banco de dados:
 def importar_csv_para_bd():
@@ -434,7 +442,7 @@ def importar_csv_para_bd():
         conexao = conectar_bd()
         cursor = conexao.cursor()
 
-        tabelas = {"id_funcionario": "funcionario", "id_cliente": "cliente", "id_carro": "carro", "id_aluguel": "aluguel"}
+        tabelas = {"id_funcionario": "funcionario", "id_cliente": "cliente", "id_carro": "carro", "id_aluguel": "aluguel", "id_login":"login"}
         
         for id, nome_tabela in tabelas.items():
             with open("./backup/"+nome_tabela+".csv", mode="r", encoding="utf-8") as arquivo:
@@ -469,7 +477,7 @@ def exportar_tabelas_para_csv():
         conexao = conectar_bd()
         cursor = conexao.cursor()
 
-        tabelas = ["funcionario", "cliente", "carro", "aluguel"]
+        tabelas = ["funcionario", "cliente", "carro", "aluguel", "login"]
 
         for tabela in tabelas:
             arquivo_csv = f"./backup/{tabela}.csv"

@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 # Cadastra um funcionário:
 def cadastrar_funcionario():
     try:
+        # Cria conexão e executa o comando:
+        conexao = conectar_bd()
+
         print("DADOS PESSOAIS DO FUNCIONÁRIO")
         nome = input("Nome Completo: ").upper()
         cpf = input("CPF (somente números): ").upper()
@@ -35,18 +38,35 @@ def cadastrar_funcionario():
         
         # Cadastra novo funcionário:
         dados = [nome, cpf, telefone, cargo, id_gerente]
-        
-        post_tabela("funcionario", dados)
-        return True
+        id_gerado = post_tabela(conexao, "funcionario", dados, autocommit=False)
+
+        print(id_gerado)
+        # Criar um login e senha:
+        login = input("login: ")
+        senha = input("Crie uma senha: ")
+        senha_conf = input("Repita a senha: ")
+
+        if (senha_conf == senha):
+                        # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
+            dados_login = [login, senha, "funcionario", None, id_gerado]
+            post_tabela(conexao, "login", dados_login, autocommit=True)
+            return True
 
     except Exception as e:
         print(f"Erro : {e}")
         sleep(0.25)
         return False
     
+    finally:
+        # Fecha a conexão:
+        conexao.close()
+    
 # Cadastra um novo cliente:
 def cadastrar_cliente():
     try:
+        # Abre a conexão com o banco de dados:
+        conexao = conectar_bd()
+
         print("DADOS PESSOAIS DO CLIENTE")
         nome = input("Nome Completo: ").upper()
         cpf = input("CPF: ").upper()
@@ -63,17 +83,34 @@ def cadastrar_cliente():
         
         # Cadastra novo cliente:
         dados = [nome, cpf, cnh, telefone, cidade, bairro, rua, numero]
-        post_tabela("cliente", dados)
-        return True
+        id_gerado = post_tabela(conexao, "cliente", dados)
+
+        # Criar um login e senha:
+        usuario = input("Usuario: ")
+        senha = input("Crie uma senha: ")
+        senha_conf = input("Repita a senha: ")
+
+        if (senha_conf == senha):
+                        # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
+            dados_login = [usuario, senha, "cliente", id_gerado, None]
+            post_tabela(conexao, "login", dados_login, autocommit=True)
+            return True
 
     except Exception as e:
         print(f"Erro : {e}")
         sleep(0.25)
         return False
     
+    finally:
+        # Fecha a conexão:
+        conexao.close()
+    
 # Cadastra um novo carro:
 def cadastrar_carro():
     try:
+        # Abre a conexão com o banco de dados:
+        conexao = conectar_bd()
+
         print("DADOS DO CARRO")
         modelo = input("Modelo: ").upper()
         marca = input("Marca: ").upper()
@@ -83,17 +120,24 @@ def cadastrar_carro():
         
         # Cadastra novo carro:
         dados = [modelo, marca, diaria]
-        post_tabela("carro", dados)
+        post_tabela(conexao, "carro", dados)
         return True
     
     except Exception as e:
         print(f"Erro : {e}")
         sleep(0.25)
         return False
+    
+    finally:
+        # Fecha a conexão:
+        conexao.close()
 
 # Registra uma nova locação
 def cadastrar_aluguel():
     try:
+        # Abre a conexão com o banco de dados:
+        conexao = conectar_bd()
+
         #  Solicita ID do Funcionário responsável pelo aluguel:
         os.system('cls')
         print("\n=== Sistema de Aluguel de Carros ===")
@@ -141,10 +185,10 @@ def cadastrar_aluguel():
         # status = True
         print()
 
-        dados = [id_func, id_car, id_cli, data_ini, data_fim, preco_total]
+        dados = [id_func, id_cli, id_car, data_ini, data_fim, preco_total]
 
         # Registra Aluguel e atualiza os dados dos envolvidos:
-        if post_tabela("aluguel", dados):
+        if post_tabela(conexao, "aluguel", dados):
             inicia_aluguel(id_cli, id_car)
         return True
 
@@ -152,11 +196,18 @@ def cadastrar_aluguel():
         print(f"Erro : {e}")
         sleep(0.25)
         return False
+    
+    finally:
+        # Fecha a conexão:
+        conexao.close()
 
 # ==================================================
 # Modifica os dados de um funcionário:
 def edita_funcionario(id):
     try:
+        # Abre a conexão:
+        conexao = conectar_bd()
+
         dados_atuais = dados_tabela("funcionario", id)
 
         exibe_dados(dados_atuais)
@@ -169,7 +220,7 @@ def edita_funcionario(id):
             "cargo": input("Cargo: ").upper() or dados_atuais['cargo'],
         }
         
-        update_tabela("funcionario", id, dados)
+        update_tabela(conexao, "funcionario", id, dados)
         return True
 
     except Exception as e:
@@ -177,9 +228,16 @@ def edita_funcionario(id):
         sleep(0.25)
         return False
     
+    finally:
+        # Fecha a conexão:
+        conexao.close()
+    
 # Modifica os dados de um cliente:
 def edita_cliente(id):
     try:
+        # Inicia uma conexão ao banco de dados:
+        conexao = conectar_bd()
+
         dados_atuais = dados_tabela("cliente", id)
 
         exibe_dados(dados_atuais)
@@ -197,7 +255,7 @@ def edita_cliente(id):
             "status_aluguel": dados_atuais['status_aluguel']
         }
         
-        update_tabela("cliente", id, dados)
+        update_tabela(conexao, "cliente", id, dados)
         return True
 
     except Exception as e:
@@ -205,9 +263,16 @@ def edita_cliente(id):
         sleep(0.25)
         return False
     
+    finally:
+        # Fecha a conexão:
+        conexao.close()
+    
 # Modifica os dados de um carro:
 def edita_carro(id):
     try:
+        # Inicia uma conexão ao banco de dados:
+        conexao = conectar_bd()
+
         dados_atuais = dados_tabela("carro", id)
 
         exibe_dados(dados_atuais)
@@ -219,7 +284,7 @@ def edita_carro(id):
             "diaria": float(input("Valor da Diária: ")) or dados_atuais['diaria']
         }
         
-        update_tabela("carro", id, dados)
+        update_tabela(conexao, "carro", id, dados)
         return True
 
     except Exception as e:
@@ -227,9 +292,16 @@ def edita_carro(id):
         sleep(0.25)
         return False
     
+    finally:
+        # Fecha a conexão:
+        conexao.close()
+    
 # Modifica os dados de um aluguel:
 def edita_aluguel(id):
     try:
+        # Inicia uma conexão ao banco de dados:
+        conexao = conectar_bd()
+
         dados_atuais = dados_tabela("aluguel", id)
 
         exibe_dados(dados_atuais)
@@ -253,11 +325,15 @@ def edita_aluguel(id):
             "status": novo_status or dados_atuais['status']
         }
 
-        update_tabela("aluguel", id, dados)
+        update_tabela(conexao, "aluguel", id, dados)
         return True
     
     except Exception as e:
         print(f"Erro : {e}")
         sleep(0.5)
         return False
+
+    finally:
+        # Fecha a conexão:
+        conexao.close()
 

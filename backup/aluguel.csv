@@ -1,2 +1,1 @@
-id_aluguel,id_funcionario,id_carro,id_cliente,data_inicio,data_fim,preco_total,status
-1,2,1,2,2025-03-24,2025-03-29,750.00,True
+id_aluguel,id_funcionario,id_cliente,id_carro,data_inicio,data_fim,preco_total,status
