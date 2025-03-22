@@ -36,7 +36,7 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS funcionario(
             id_funcionario SERIAL,
             nome VARCHAR(80) not null,
-            cpf VARCHAR(11) not null,
+            cpf VARCHAR(11) UNIQUE not null,
             telefone VARCHAR(11) not null,
             cargo VARCHAR(30) not null,
             id_gerente INTEGER,
@@ -51,8 +51,8 @@ def criar_tabelas():
         CREATE TABLE IF NOT EXISTS cliente(
             id_cliente SERIAL,
             nome VARCHAR(80) not null,
-            cpf VARCHAR(11) not null,
-            cnh VARCHAR(11) not null,
+            cpf VARCHAR(11) UNIQUE not null,
+            cnh VARCHAR(11) UNIQUE not null,
             telefone VARCHAR(11) not null,
             cidade VARCHAR(50) not null,
             bairro VARCHAR(50) not null,
@@ -100,12 +100,12 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS login(
             id_login SERIAL,
-            usuario VARCHAR(30) not null,
-            senha VARCHAR(30) not null,            
+            usuario VARCHAR(30) UNIQUE not null,
+            senha VARCHAR(255) not null,            
             tipo_usuario VARCHAR(15) not null CHECK (tipo_usuario IN ('cliente', 'funcionario')),
             
-            id_cliente INTEGER,
-            id_funcionario INTEGER,
+            id_cliente INTEGER UNIQUE,
+            id_funcionario INTEGER UNIQUE,
             
             PRIMARY key (id_login),
             
