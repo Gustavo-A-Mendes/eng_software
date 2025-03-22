@@ -111,18 +111,19 @@ def post_tabela(tabela, dados_envio):
     :param dado_envio: Lista dos valores que devem ser adicionados.
     """
     
-    # Cria conexão e executa o comando:
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
-
-    valores = ', '.join(["%s"] * len(dados_envio))
-    
     try:
+        # Cria conexão e executa o comando:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
+
+        valores = ', '.join(["%s"] * len(dados_envio))
+
         # Obtém as colunas da tabela (excluindo a coluna SERIAL, se houver):
         cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' AND column_default IS NULL")
         colunas = [coluna[0] for coluna in cursor.fetchall()]
         if not colunas:
             print("Erro: Não foi possível obter as colunas da tabela.")
+            sleep(0.25)
             return False
         else:
             # Adiciona os valores na tabela:
@@ -132,6 +133,7 @@ def post_tabela(tabela, dados_envio):
 
     except Exception as e:
         print(f"Erro ao atualizar: {e}")
+        sleep(0.25)
         return False
 
     finally:
@@ -147,16 +149,17 @@ def get_tabela(tabela):
     :param tabela: Nome da tabela.
     """
     
-    # Cria conexão e executa o comando:
-    conexao = conectar_bd()
-    cursor = conexao.cursor(cursor_factory=RealDictCursor)
-
     try:
+        # Cria conexão e executa o comando:
+        conexao = conectar_bd()
+        cursor = conexao.cursor(cursor_factory=RealDictCursor)
+
         cursor.execute(f"SELECT * FROM {tabela}")
         clientes = cursor.fetchall()
         # Caso o resultado seja vazio, encerra a função:
         if not clientes:
             print("Nenhum cliente cadastrado.")
+            sleep(0.25)
             return None
         
         return clientes
@@ -164,6 +167,7 @@ def get_tabela(tabela):
 
     except Exception as e:
         print(f"Erro ao atualizar: {e}")
+        sleep(0.25)
         clientes = None
     
     finally:
@@ -181,20 +185,21 @@ def update_tabela(tabela, id, dados_envio):
     :param dados_envio: Dicionário com as colunas e valores a serem atualizados.
     """
     
-    # Cria conexão e executa o comando:
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
-    
-    # Cria os pares "coluna = valor" dinamicamente:
-    colunas_valores = [f"{coluna} = %s" for coluna in dados_envio.keys()]
-
-    cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' LIMIT 1")
-    id_name = "".join(cursor.fetchall()[0])
-    query = f"UPDATE {tabela} SET {', '.join(colunas_valores)} WHERE {id_name} = {id}"
-
     try:
+        # Cria conexão e executa o comando:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
+        
+        # Cria os pares "coluna = valor" dinamicamente:
+        colunas_valores = [f"{coluna} = %s" for coluna in dados_envio.keys()]
+
+        cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' LIMIT 1")
+        id_name = "".join(cursor.fetchall()[0])
+        query = f"UPDATE {tabela} SET {', '.join(colunas_valores)} WHERE {id_name} = {id}"
+
         if not dados_envio:
             print("Nenhum dado para atualizar.")
+            sleep(0.25)
             return False
         else:
             cursor.execute(query, tuple(dados_envio.values()))
@@ -204,6 +209,7 @@ def update_tabela(tabela, id, dados_envio):
 
     except Exception as e:
         print(f"Erro ao atualizar: {e}")
+        sleep(0.25)
         return False
     
     finally:
@@ -219,11 +225,11 @@ def delete_tabela(tabela, id = None):
     :param id: ID do registro a ser removido.
     """
     
-    # Cria conexão e executa o comando:
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
-
     try:
+        # Cria conexão e executa o comando:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
+
         if id is None:
             confirmacao = input(f"Tem certeza que deseja excluir TODOS os registros da tabela '{tabela}'? (sim/não): ").strip().lower()
             if confirmacao == "sim":
@@ -231,6 +237,7 @@ def delete_tabela(tabela, id = None):
                 message = f"TODOS os registros da tabela '{tabela}' foram removidos!"
             else:
                 print("Operação cancelada.")
+                sleep(0.25)
                 return False
 
         else:
@@ -247,6 +254,7 @@ def delete_tabela(tabela, id = None):
 
     except Exception as e:
         print(f"Erro ao remover registro: {e}")
+        sleep(0.25)
         return False
     
     finally:
@@ -256,16 +264,17 @@ def delete_tabela(tabela, id = None):
 # ===============================================================================
 # Retorna uma lista de dados de uma tabela:
 def listar_tabela(tabela):
-    conexao = conectar_bd()
-    cursor = conexao.cursor(cursor_factory=RealDictCursor)
-
     try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor(cursor_factory=RealDictCursor)
+
         cursor.execute(f"SELECT * FROM {tabela}")
         dados_tabela = cursor.fetchall()
         return dados_tabela
     
     except Exception as e:
         print(f"Erro ao buscar dados: {e}")
+        sleep(0.25)
         return None
 
     finally:
@@ -274,111 +283,160 @@ def listar_tabela(tabela):
 
 # Exibe a lista de uma tabela:
 def exibe_tabela(nome_tabela):
-    dados_tabela = listar_tabela(f"{nome_tabela}")
+    try:
+        dados_tabela = listar_tabela(f"{nome_tabela}")
 
-    if not dados_tabela:
-        print(f"Nenhum(a) {nome_tabela} cadastrado(a).")
-        return False
-    else:
-        colunas = f"({', '.join([coluna.upper() for coluna in dados_tabela[0].keys()])})"
-        print(f"{colunas}")
-        
-        for linha in dados_tabela:
-            valores = f"({', '.join([str(valor).upper() for valor in linha.values()])})"
-            print(valores)
-        print()
-        
-        return True
+        if not dados_tabela:
+            print(f"Nenhum(a) {nome_tabela} cadastrado(a).")
+            return False
+        else:
+            colunas = f"({', '.join([coluna.upper() for coluna in dados_tabela[0].keys()])})"
+            print(f"{colunas}")
+            
+            for linha in dados_tabela:
+                valores = f"({', '.join([str(valor).upper() for valor in linha.values()])})"
+                print(valores)
+            print()
+            
+            return True
     
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return False
+
 # Exibe os dados de uma linha:
 def exibe_dados(dado):
-
-    colunas = f"({', '.join([coluna.upper() for coluna in dado.keys()])})"
+    try:
+        colunas = f"({', '.join([coluna.upper() for coluna in dado.keys()])})"
+        valores = f"({', '.join([str(valor).upper() for valor in dado.values()])})"
+        
+        print(f"{colunas}\n{valores}")
     
-    valores = f"({', '.join([str(valor).upper() for valor in dado.values()])})"
-    
-    print(f"{colunas}\n{valores}")
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return False
 
 # Busca o ID do gerente daquele funcionário:
 def get_gerenteID():
-    conexao = conectar_bd()
-    cursor = conexao.cursor(cursor_factory=RealDictCursor)
+    try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor(cursor_factory=RealDictCursor)
 
-    cursor.execute(f"SELECT id_funcionario FROM funcionario WHERE cargo = 'GERENTE'")
+        cursor.execute(f"SELECT id_funcionario FROM funcionario WHERE cargo = 'GERENTE'")
 
-    gerente = cursor.fetchone()
-    id_gerente = None
-    if gerente:
-        id_gerente = gerente['id_funcionario']
+        gerente = cursor.fetchone()
+        if gerente:
+            id_gerente = gerente['id_funcionario']
+            return id_gerente
     
-    cursor.close()
-    conexao.close()
-
-    return id_gerente
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return None
+    
+    finally:
+        cursor.close()
+        conexao.close()
 
 # Conta quantos funcionários pertencem a um cargo:
 def conta_cargo(cargo):
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
+    try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
 
-    cursor.execute(f"SELECT COUNT(*) FROM funcionario WHERE cargo = '{cargo}';")
-    cargo_func = cursor.fetchone()[0]
+        cursor.execute(f"SELECT COUNT(*) FROM funcionario WHERE cargo = '{cargo}';")
+        cargo_func = cursor.fetchone()[0]
+        return cargo_func
     
-    cursor.close()
-    conexao.close()
-
-    return cargo_func
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return None
+    
+    finally:
+        cursor.close()
+        conexao.close()
 
 # Calcula o preço do aluguel:
 def preco_carro(id_carro, tempo_aluguel):
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
+    try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
 
-    cursor.execute(f"SELECT diaria FROM carro WHERE id_carro = {id_carro};")
+        cursor.execute(f"SELECT diaria FROM carro WHERE id_carro = {id_carro};")
 
-    diaria = cursor.fetchone()[0]
-
-    cursor.close()
-    conexao.close()
-
-    return diaria * tempo_aluguel
+        diaria = cursor.fetchone()[0]
+        return diaria * tempo_aluguel
+    
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return None
+    
+    finally:
+        cursor.close()
+        conexao.close()
 
 # Retorna um dicionário dos dados de uma linha:
 def dados_tabela(tabela, id):
-    conexao = conectar_bd()
-    cursor = conexao.cursor(cursor_factory=RealDictCursor)
+    try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor(cursor_factory=RealDictCursor)
 
-    cursor.execute(f"SELECT * FROM {tabela} WHERE id_{tabela} = {id}")
+        cursor.execute(f"SELECT * FROM {tabela} WHERE id_{tabela} = {id}")
 
-    dados_id = cursor.fetchone()
+        dados_id = cursor.fetchone()
+        return dados_id
+    
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return False
 
-    cursor.close()
-    conexao.close()
+    finally:
+        cursor.close()
+        conexao.close()
 
-    return dados_id
-
+# Atualiza status de cliente e carro ao iniciar aluguel:
 def inicia_aluguel(id_cliente, id_carro):
-    update_tabela('cliente', id_cliente, {'status_aluguel': True})
-    update_tabela('carro', id_carro, {'disponibilidade': False})
+    try:
+        update_tabela('cliente', id_cliente, {'status_aluguel': True})
+        update_tabela('carro', id_carro, {'disponibilidade': False})
+        return True
+    
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return False
 
+# Atualiza status de cliente e carro ao encerrar aluguel:
 def encerra_aluguel(dados_aluguel):
-    id_cli = dados_aluguel['id_cliente']
-    id_car = dados_aluguel['id_carro']
+    try:
+        id_cli = dados_aluguel['id_cliente']
+        id_car = dados_aluguel['id_carro']
 
-    update_tabela('cliente', id_cli, {'status_aluguel': False})
-    update_tabela('carro', id_car, {'disponibilidade': True})
+        update_tabela('cliente', id_cli, {'status_aluguel': False})
+        update_tabela('carro', id_car, {'disponibilidade': True})
+        return True
 
+    except Exception as e:
+        print(f"Erro : {e}")
+        sleep(0.25)
+        return False
 
 # Importa dados dos arquivos ".csv" para o banco de dados:
 def importar_csv_para_bd():
     """Importa dados de um arquivo CSV para a tabela especificada."""
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
-
-    tabelas = {"id_funcionario": "funcionario", "id_cliente": "cliente", "id_carro": "carro", "id_aluguel": "aluguel"}
     
-    for id, nome_tabela in tabelas.items():
-        try:
+    try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
+
+        tabelas = {"id_funcionario": "funcionario", "id_cliente": "cliente", "id_carro": "carro", "id_aluguel": "aluguel"}
+        
+        for id, nome_tabela in tabelas.items():
             with open("./backup/"+nome_tabela+".csv", mode="r", encoding="utf-8") as arquivo:
                 leitor_csv = csv.reader(arquivo)
                 colunas = next(leitor_csv)  # Lê a primeira linha (nomes das colunas)
@@ -393,39 +451,51 @@ def importar_csv_para_bd():
 
             conexao.commit()
             print(f"Dados do arquivo \"{nome_tabela+'.csv'}\" importados para a tabela \"{nome_tabela}\" com sucesso!")
+        
+        return True
 
+    except Exception as e:
+        print(f"Erro ao importar dados: {e}")
+        sleep(0.25)
+        return False
 
-        except Exception as e:
-            print(f"Erro ao importar dados: {e}")
-
-    cursor.close()
-    conexao.close()
-    sleep(3)
+    finally:
+        cursor.close()
+        conexao.close()
 
 # Exporta dodas do banco de dados, para um arquivo ".csv":
 def exportar_tabelas_para_csv():
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
+    try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
 
-    tabelas = ["funcionario", "cliente", "carro", "aluguel"]
+        tabelas = ["funcionario", "cliente", "carro", "aluguel"]
 
-    for tabela in tabelas:
-        arquivo_csv = f"./backup/{tabela}.csv"
+        for tabela in tabelas:
+            arquivo_csv = f"./backup/{tabela}.csv"
+            
+            # Executa a consulta para pegar todos os dados da tabela
+            cursor.execute(f"SELECT * FROM {tabela}")
+            dados = cursor.fetchall()  # Recupera todos os registros
+            
+            # Obtém os nomes das colunas
+            colunas = [desc[0] for desc in cursor.description]
+
+            # Escreve os dados no arquivo CSV
+            with open(arquivo_csv, mode="w+", newline="", encoding="utf-8") as arquivo:
+                writer = csv.writer(arquivo)
+                writer.writerow(colunas)  # Escreve os cabeçalhos das colunas
+                writer.writerows(dados)   # Escreve os dados
+
+            print(f"Tabela '{tabela}' exportada para '{arquivo_csv}'")
         
-        # Executa a consulta para pegar todos os dados da tabela
-        cursor.execute(f"SELECT * FROM {tabela}")
-        dados = cursor.fetchall()  # Recupera todos os registros
-        
-        # Obtém os nomes das colunas
-        colunas = [desc[0] for desc in cursor.description]
-
-        # Escreve os dados no arquivo CSV
-        with open(arquivo_csv, mode="w+", newline="", encoding="utf-8") as arquivo:
-            writer = csv.writer(arquivo)
-            writer.writerow(colunas)  # Escreve os cabeçalhos das colunas
-            writer.writerows(dados)   # Escreve os dados
-
-        print(f"Tabela '{tabela}' exportada para '{arquivo_csv}'")
-
-    cursor.close()
-    conexao.close()
+        return True
+    
+    except Exception as e:
+        print(f"Erro ao exportar dados: {e}")
+        sleep(0.25)
+        return False
+    
+    finally:
+        cursor.close()
+        conexao.close()

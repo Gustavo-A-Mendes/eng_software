@@ -1,6 +1,7 @@
 from crud import *
 from sistema import *
 
+# 
 def menu():
     while True:
         os.system('cls')
@@ -30,9 +31,9 @@ def menu():
         
         else:
             print("\nOpção inválida! Tente novamente.")
-            sleep(0.5)
+            sleep(0.25)
 
-
+#
 def menu_cadastro():
     while True:
         os.system('cls') 
@@ -46,24 +47,28 @@ def menu_cadastro():
 
         if opcao_submenu == "1":
             cadastrar_aluguel()
+            break
         
         elif opcao_submenu == "2":
             cadastrar_cliente()
+            break
         
         elif opcao_submenu == "3":
             cadastrar_carro()
+            break
         
         elif opcao_submenu == "4":
             cadastrar_funcionario()
+            break
         
         elif opcao_submenu == "5":
             break
         
         else:
             print("\nOpção inválida! Tente novamente.")
-            sleep(0.5)
+            sleep(0.25)
 
-
+#
 def menu_consulta():
     while True:
         os.system('cls')
@@ -90,26 +95,26 @@ def menu_consulta():
                 ret = exibir_opcoes()
                 if ret == "1":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("aluguel", id):
+                    if verifica_id_existente("aluguel", id):
                         edita_aluguel(id)
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
                 elif ret == "2":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("aluguel", id):
+                    if verifica_id_existente("aluguel", id):
                         dados_aluguel = dados_tabela('aluguel', id)
                         if delete_tabela("aluguel", id):
                             encerra_aluguel(dados_aluguel)
 
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
                 elif ret == "3":
                     break
                 else: 
                     print("Opção inválida.")
-                    sleep(0.5)
+                    sleep(0.25)
         
         # SUBMENU CLIENTE
         elif opcao_submenu == "2":
@@ -126,23 +131,23 @@ def menu_consulta():
                 ret = exibir_opcoes()
                 if ret == "1":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("cliente", id):
+                    if verifica_id_existente("cliente", id):
                         edita_cliente(id)
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
                 elif ret == "2":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("cliente", id):
+                    if verifica_id_existente("cliente", id):
                         delete_tabela("cliente", id)
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
                 elif ret == "3":
                     break
                 else: 
                     print("Opção inválida.")
-                    sleep(0.5)
+                    sleep(0.25)
 
         # SUBMENU CARROS
         elif opcao_submenu == "3":
@@ -159,24 +164,24 @@ def menu_consulta():
                 ret = exibir_opcoes()
                 if ret == "1":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("carro", id):
+                    if verifica_id_existente("carro", id):
                         edita_carro(id)
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
                 elif ret == "2":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("carro", id):
+                    if verifica_id_existente("carro", id):
                         delete_tabela("carro", id)
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
 
                 elif ret == "3":
                     break
                 else: 
                     print("Opção inválida.")
-                    sleep(0.5)
+                    sleep(0.25)
 
         # SUBMENU FUNCIONÁRIOS
         elif opcao_submenu == "4":
@@ -193,53 +198,59 @@ def menu_consulta():
                 ret = exibir_opcoes()
                 if ret == "1":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("funcionario", id):
+                    if verifica_id_existente("funcionario", id):
                         edita_funcionario(id)
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
                 elif ret == "2":
                     id = input("Especifique um ID: ")
-                    if verificar_id_existente("funcionario", id):
+                    if verifica_id_existente("funcionario", id):
                         delete_tabela("funcionario", id)
                     else:
                         print("ID não encontrado.")
-                        sleep(0.5)
+                        sleep(0.25)
                 elif ret == "3":
                     break
                 else: 
                     print("Opção inválida.")
-                    sleep(0.5)
+                    sleep(0.25)
 
         elif opcao_submenu == "5":
             break
 
         else:
             print("\nOpção inválida! Tente novamente.")
-            sleep(0.5)
+            sleep(0.25)
 
-
+# Opções exibidas na consulta:
 def exibir_opcoes():
     print("1. Editar")
     print("2. Remover")
     print("3. Voltar")
     return input("Escolha uma opção: ")
 
+# 
+def verifica_id_existente(tabela, id):
+    try:
+        conexao = conectar_bd()
+        cursor = conexao.cursor()
 
-def verificar_id_existente (tabela, id):
-    conexao = conectar_bd()
-    cursor = conexao.cursor()
-
-    cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' LIMIT 1")
-    id_name = "".join(cursor.fetchall()[0])
+        cursor.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{tabela}' LIMIT 1")
+        id_name = "".join(cursor.fetchall()[0])
+        
+        cursor.execute(f"SELECT * FROM {tabela} WHERE {id_name} = {id}")
+        id_tabela = cursor.fetchone()
+        return id_tabela
     
-    cursor.execute(f"SELECT * FROM {tabela} WHERE {id_name} = {id}")
-    id_tabela = cursor.fetchone()
+    except Exception as e:
+        print(f"Erro : {e}")
+        return False
+    
+    finally:
+        cursor.close()
+        conexao.close()
 
-    cursor.close()
-    conexao.close()
-
-    return id_tabela
 
 # ===============================================================================   
 # Execução do sistema:
