@@ -49,8 +49,10 @@ def cadastrar_funcionario():
         if (senha_conf == senha):
                         # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
             dados_login = [login, senha, "funcionario", None, id_gerado]
-            post_tabela(conexao, "login", dados_login, autocommit=True)
-            return True
+            if post_tabela(conexao, "login", dados_login, autocommit=True):
+                return True
+            
+            return False
 
     except Exception as e:
         print(f"Erro : {e}")
@@ -93,8 +95,10 @@ def cadastrar_cliente():
         if (senha_conf == senha):
                         # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
             dados_login = [usuario, senha, "cliente", id_gerado, None]
-            post_tabela(conexao, "login", dados_login, autocommit=True)
-            return True
+            if post_tabela(conexao, "login", dados_login, autocommit=True):
+                return True
+
+            return False
 
     except Exception as e:
         print(f"Erro : {e}")
@@ -325,8 +329,9 @@ def edita_aluguel(id):
             "status": novo_status or dados_atuais['status']
         }
 
-        update_tabela(conexao, "aluguel", id, dados)
-        return True
+        if update_tabela(conexao, "aluguel", id, dados) and novo_status == False:
+            encerra_aluguel(dados_atuais)
+            return True
     
     except Exception as e:
         print(f"Erro : {e}")

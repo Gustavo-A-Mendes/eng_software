@@ -281,4 +281,4 @@ def verifica_id_existente(tabela, id):
 # Execução do sistema:
 if __name__ == "__main__":
     criar_tabelas()
-    menu_geral()
+    menu_funcionario()
