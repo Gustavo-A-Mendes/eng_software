@@ -1,1 +1,1 @@
-id_aluguel,id_funcionario,id_cliente,id_carro,data_inicio,data_fim,preco_total,status
+id_aluguel,data_inicio,data_fim,preco_total,status,id_funcionario,id_cliente,id_carro

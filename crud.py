@@ -77,13 +77,14 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS aluguel(
             id_aluguel SERIAL,
-            id_funcionario INTEGER not null,
-            id_cliente INTEGER not null,
-            id_carro INTEGER not null,
             data_inicio DATE not null,
             data_fim DATE,
             preco_total NUMERIC(7, 2) not null,
             status BOOLEAN default TRUE,
+            
+            id_funcionario INTEGER not null,
+            id_cliente INTEGER not null,
+            id_carro INTEGER not null,
             
             PRIMARY key (id_aluguel),
             
