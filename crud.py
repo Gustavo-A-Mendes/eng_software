@@ -35,7 +35,7 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS funcionario(
             id_funcionario SERIAL,
-            nome VARCHAR(80) not null,
+            nome VARCHAR(50) not null,
             cpf VARCHAR(11) UNIQUE not null,
             telefone VARCHAR(11) not null,
             cargo VARCHAR(30) not null,
@@ -50,8 +50,9 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS cliente(
             id_cliente SERIAL,
-            nome VARCHAR(80) not null,
+            nome VARCHAR(50) not null,
             cpf VARCHAR(11) UNIQUE not null,
+            email VARCHAR(50) UNIQUE not null,
             cnh VARCHAR(11) UNIQUE not null,
             telefone VARCHAR(11) not null,
             cidade VARCHAR(50) not null,
@@ -66,6 +67,7 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS carro(
             id_carro SERIAL,
+            placa VARCHAR(7) UNIQUE not null,
             modelo VARCHAR(30) not null,
             marca VARCHAR(30) not null,
             diaria NUMERIC(6, 2) not null,
@@ -101,21 +103,15 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS login(
             id_login SERIAL,
-            usuario VARCHAR(30) UNIQUE not null,
+            email VARCHAR(30) UNIQUE not null,
             senha VARCHAR(255) not null,            
-            tipo_usuario VARCHAR(15) not null CHECK (tipo_usuario IN ('cliente', 'funcionario')),
             
-            id_cliente INTEGER UNIQUE,
             id_funcionario INTEGER UNIQUE,
             
             PRIMARY key (id_login),
             
-            CONSTRAINT fk_cliente FOREIGN KEY (id_cliente) REFERENCES cliente ON DELETE CASCADE,
-            CONSTRAINT fk_funcionario FOREIGN KEY (id_funcionario) REFERENCES funcionario ON DELETE CASCADE,
-            CONSTRAINT chk_tipo_usuario CHECK (
-                (id_cliente IS NOT NULL AND id_funcionario IS NULL) OR
-                (id_cliente IS NULL AND id_funcionario IS NOT NULL)
-            )
+            FOREIGN key (id_funcionario) REFERENCES funcionario
+            ON UPDATE CASCADE ON DELETE CASCADE
         );
     ''')
     conexao.commit()

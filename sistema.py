@@ -8,6 +8,7 @@ def cadastrar_funcionario():
         # Cria conexão e executa o comando:
         conexao = conectar_bd()
 
+        os.system('cls')
         print("DADOS PESSOAIS DO FUNCIONÁRIO")
         nome = input("Nome Completo: ").upper()
         cpf = input("CPF (somente números): ").upper()
@@ -40,19 +41,21 @@ def cadastrar_funcionario():
         dados = [nome, cpf, telefone, cargo, id_gerente]
         id_gerado = post_tabela(conexao, "funcionario", dados, autocommit=False)
 
-        print(id_gerado)
-        # Criar um login e senha:
-        login = input("login: ")
-        senha = input("Crie uma senha: ")
-        senha_conf = input("Repita a senha: ")
+        # Criar uma autenticação de email e senha:
+        email = input("E-mail: ").lower()
 
-        if (senha_conf == senha):
-                        # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
-            dados_login = [login, senha, "funcionario", None, id_gerado]
-            if post_tabela(conexao, "login", dados_login, autocommit=True):
-                return True
+        while True:
+            os.system('cls')
+            senha = input("Crie uma senha: ")
+            senha_conf = input("Repita a senha: ")
+
+            if (senha_conf == senha):
+                            # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
+                dados_login = [email, senha, id_gerado]
+                if post_tabela(conexao, "login", dados_login, autocommit=True):
+                    return True
             
-            return False
+            print("Senhas não conferem. Tente novamente.")
 
     except Exception as e:
         print(f"Erro : {e}")
@@ -69,9 +72,11 @@ def cadastrar_cliente():
         # Abre a conexão com o banco de dados:
         conexao = conectar_bd()
 
+        os.system('cls')
         print("DADOS PESSOAIS DO CLIENTE")
         nome = input("Nome Completo: ").upper()
         cpf = input("CPF: ").upper()
+        email = input("E-mail: ").lower()
         cnh = input("CNH: ").upper()
         telefone = input("Telefone (somente números): ").upper()
         print()
@@ -84,21 +89,10 @@ def cadastrar_cliente():
         print()
         
         # Cadastra novo cliente:
-        dados = [nome, cpf, cnh, telefone, cidade, bairro, rua, numero]
-        id_gerado = post_tabela(conexao, "cliente", dados)
-
-        # Criar um login e senha:
-        usuario = input("Usuario: ")
-        senha = input("Crie uma senha: ")
-        senha_conf = input("Repita a senha: ")
-
-        if (senha_conf == senha):
-                        # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
-            dados_login = [usuario, senha, "cliente", id_gerado, None]
-            if post_tabela(conexao, "login", dados_login, autocommit=True):
-                return True
-
-            return False
+        dados = [nome, cpf, email, cnh, telefone, cidade, bairro, rua, numero]
+        if post_tabela(conexao, "cliente", dados):
+            return True
+        return False
 
     except Exception as e:
         print(f"Erro : {e}")
@@ -115,6 +109,7 @@ def cadastrar_carro():
         # Abre a conexão com o banco de dados:
         conexao = conectar_bd()
 
+        os.system('cls')
         print("DADOS DO CARRO")
         modelo = input("Modelo: ").upper()
         marca = input("Marca: ").upper()

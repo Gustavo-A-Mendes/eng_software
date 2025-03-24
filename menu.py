@@ -1,33 +1,8 @@
 from crud import *
 from sistema import *
 
-#
-def menu_inicial():
-    while True:
-        os.system('cls')
-        print("\n=== Sistema de Aluguel de Carros ===")
-        print("1. Cliente")
-        print("2. Funcionário")
-        opcao = input("Escolha uma opção: ")
-
-        # MENU CLIENTE
-        if opcao == "1":
-            menu_cliente()
-
-        # MENU FUNCIONÁRIO
-        elif opcao == "2":
-            menu_funcionario()
-        
-        else:
-            print("\nOpção inválida! Tente novamente.")
-            sleep(0.25)
-
-#
-def menu_cliente():
-    pass
-
 # 
-def menu_funcionario():
+def menu():
     while True:
         os.system('cls')
         print("=== Sistema de Aluguel de Carros ===")
@@ -255,6 +230,38 @@ def exibir_opcoes():
     print("3. Voltar")
     return input("Escolha uma opção: ")
 
+def autenticacao():
+    os.system('cls')
+    
+    try:
+        # Inicia uma conexão ao banco de dados:
+        conexao = conectar_bd()
+
+        email = input("Digite seu E-mail: ")
+        senha = input("Digite sua senha: ")
+
+        dados_autenticacao = get_tabela(conexao, 'login')
+
+        if [email, senha] == ['admin', 'admin']:
+            return True
+        
+        for linha in dados_autenticacao:
+            if [email, senha] == [linha['email'], linha['senha']]:
+                return linha['id_funcionario']
+
+        print("E-mail ou senha inválidos.")
+        sleep(0.25)
+        return None
+    
+    except Exception as e:
+        print(f"Erro ao conectar ao banco de dados: {e}")
+        sleep(0.25)
+        return None
+
+    finally:
+        # Fecha a conexão ao banco de dados:
+        conexao.close()
+    
 # 
 def verifica_id_existente(tabela, id):
     try:
@@ -281,4 +288,8 @@ def verifica_id_existente(tabela, id):
 # Execução do sistema:
 if __name__ == "__main__":
     criar_tabelas()
-    menu_funcionario()
+    
+    while not autenticacao():
+        continue
+    
+    menu()

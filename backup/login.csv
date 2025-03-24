@@ -1,1 +1,2 @@
-id_login,usuario,senha,tipo_usuario,id_cliente,id_funcionario
+id_login,email,senha,id_funcionario
+1,ademirofagundes@gmail.com,ademirfa,1

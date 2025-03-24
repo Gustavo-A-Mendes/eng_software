@@ -1,1 +1,1 @@
-id_cliente,nome,cpf,cnh,telefone,cidade,bairro,rua,numero,status_aluguel
+id_cliente,nome,cpf,email,cnh,telefone,cidade,bairro,rua,numero,status_aluguel
