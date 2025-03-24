@@ -237,19 +237,19 @@ def autenticacao():
         # Inicia uma conexão ao banco de dados:
         conexao = conectar_bd()
 
-        email = input("Digite seu E-mail: ")
+        usuario = input("Digite seu usuário: ")
         senha = input("Digite sua senha: ")
 
         dados_autenticacao = get_tabela(conexao, 'login')
 
-        if [email, senha] == ['admin', 'admin']:
+        if [usuario, senha] == ['admin', 'admin']:
             return True
         
         for linha in dados_autenticacao:
-            if [email, senha] == [linha['email'], linha['senha']]:
+            if [usuario, senha] == [linha['usuario'], linha['senha']]:
                 return linha['id_funcionario']
 
-        print("E-mail ou senha inválidos.")
+        print("Usuário ou senha inválidos.")
         sleep(0.25)
         return None
     

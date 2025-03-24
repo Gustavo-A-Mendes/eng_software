@@ -37,6 +37,7 @@ def criar_tabelas():
             id_funcionario SERIAL,
             nome VARCHAR(50) not null,
             cpf VARCHAR(11) UNIQUE not null,
+            email VARCHAR(50) UNIQUE not null,
             telefone VARCHAR(11) not null,
             cargo VARCHAR(30) not null,
             id_gerente INTEGER,
@@ -103,7 +104,7 @@ def criar_tabelas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS login(
             id_login SERIAL,
-            email VARCHAR(30) UNIQUE not null,
+            usuario VARCHAR(30) UNIQUE not null,
             senha VARCHAR(255) not null,            
             
             id_funcionario INTEGER UNIQUE,

@@ -12,6 +12,7 @@ def cadastrar_funcionario():
         print("DADOS PESSOAIS DO FUNCIONÁRIO")
         nome = input("Nome Completo: ").upper()
         cpf = input("CPF (somente números): ").upper()
+        email = input("E-mail: ").upper()
         telefone = input("Telefone (somente números): ").upper()
         cargo = input("Cargo: ").upper()
 
@@ -38,11 +39,11 @@ def cadastrar_funcionario():
         print()
         
         # Cadastra novo funcionário:
-        dados = [nome, cpf, telefone, cargo, id_gerente]
+        dados = [nome, cpf, email, telefone, cargo, id_gerente]
         id_gerado = post_tabela(conexao, "funcionario", dados, autocommit=False)
 
         # Criar uma autenticação de email e senha:
-        email = input("E-mail: ").lower()
+        usuario = input("Nome de usuário: ").upper()
 
         while True:
             os.system('cls')
@@ -51,7 +52,7 @@ def cadastrar_funcionario():
 
             if (senha_conf == senha):
                             # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
-                dados_login = [email, senha, id_gerado]
+                dados_login = [usuario, senha, id_gerado]
                 if post_tabela(conexao, "login", dados_login, autocommit=True):
                     return True
             
