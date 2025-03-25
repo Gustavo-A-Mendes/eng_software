@@ -41,6 +41,10 @@ def cadastrar_funcionario():
         # Cadastra novo funcionário:
         dados = [nome, cpf, email, telefone, cargo, id_gerente]
         id_gerado = post_tabela(conexao, "funcionario", dados, autocommit=False)
+        if not id_gerado:
+            print("Erro ao cadastrar funcionário")
+            sleep(0.25)
+            return False
 
         # Criar uma autenticação de email e senha:
         usuario = input("Nome de usuário: ").upper()
@@ -112,6 +116,7 @@ def cadastrar_carro():
 
         os.system('cls')
         print("DADOS DO CARRO")
+        placa = input("Placa: ").upper()
         modelo = input("Modelo: ").upper()
         marca = input("Marca: ").upper()
         diaria = float(input("Diaria: "))
@@ -119,7 +124,7 @@ def cadastrar_carro():
         print()
         
         # Cadastra novo carro:
-        dados = [modelo, marca, diaria]
+        dados = [placa, modelo, marca, diaria]
         post_tabela(conexao, "carro", dados)
         return True
     
@@ -157,7 +162,7 @@ def cadastrar_aluguel():
         exibe_tabela('cliente')
 
         id_cli = int(input("\n Digite o ID do Cliente do aluguel: "))
-
+        
         #  Solicita ID do Carro alugado:
         os.system('cls')
         print("\n=== Sistema de Aluguel de Carros ===")
@@ -167,14 +172,16 @@ def cadastrar_aluguel():
         print("\n=== Lista de Carros ===")
         
         id_car = int(input("\n Digite o ID do Carro do aluguel: "))
-
+        carro = dados_tabela('carro', id_car)
+        if not (carro['disponibilidade']):
+            return False
         # ==================================================
         os.system('cls')
         print("\n=== Sistema de Aluguel de Carros ===")
 
         data_ini_str = input("Data de Início (DD/MM/AAAA): ")
         tempo_aluguel = int(input("Quantos dias de aluguel? "))
-    
+
         # Converte a string da data em um formato datetime:
         data_ini = datetime.strptime(data_ini_str, "%d/%m/%Y").date()
         # Calcula data final do aluguel:
@@ -185,11 +192,12 @@ def cadastrar_aluguel():
         # status = True
         print()
 
-        dados = [id_func, id_cli, id_car, data_ini, data_fim, preco_total]
+        dados = [data_ini, data_fim, preco_total,id_func, id_cli, id_car]
 
         # Registra Aluguel e atualiza os dados dos envolvidos:
         if post_tabela(conexao, "aluguel", dados):
             inicia_aluguel(id_cli, id_car)
+        sleep(5)
         return True
 
     except Exception as e:

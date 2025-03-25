@@ -1,1 +1,2 @@
 id_cliente,nome,cpf,email,cnh,telefone,cidade,bairro,rua,numero,status_aluguel
+1,JOSE ANTONIO,51265112300,anderson@hotmail.com,13514312399,84912341293,UBATUBA,UFERSA,DA RESIDÊNCIA,1,False

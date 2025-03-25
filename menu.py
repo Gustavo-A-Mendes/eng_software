@@ -242,7 +242,7 @@ def autenticacao():
 
         dados_autenticacao = get_tabela(conexao, 'login')
 
-        if [usuario, senha] == ['admin', 'admin']:
+        if [usuario, senha] == ['ADMIN', 'ADMIN']:
             return True
         
         for linha in dados_autenticacao:
