@@ -237,8 +237,8 @@ def autenticacao():
         # Inicia uma conexão ao banco de dados:
         conexao = conectar_bd()
 
-        usuario = input("Digite seu usuário: ")
-        senha = input("Digite sua senha: ")
+        usuario = input("Digite seu usuário: ").upper()
+        senha = input("Digite sua senha: ").upper()
 
         dados_autenticacao = get_tabela(conexao, 'login')
 

@@ -47,8 +47,8 @@ def cadastrar_funcionario():
 
         while True:
             os.system('cls')
-            senha = input("Crie uma senha: ")
-            senha_conf = input("Repita a senha: ")
+            senha = input("Crie uma senha: ").upper()
+            senha_conf = input("Repita a senha: ").upper()
 
             if (senha_conf == senha):
                             # usuário, senha, tipo_usuario, id_cliente, id_funcionario)
