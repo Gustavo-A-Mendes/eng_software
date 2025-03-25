@@ -174,6 +174,8 @@ def cadastrar_aluguel():
         id_car = int(input("\n Digite o ID do Carro do aluguel: "))
         carro = dados_tabela('carro', id_car)
         if not (carro['disponibilidade']):
+            print("\n Carro indisponível para aluguel")
+            sleep(0.25)
             return False
         # ==================================================
         os.system('cls')
